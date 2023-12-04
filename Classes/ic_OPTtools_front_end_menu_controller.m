@@ -405,6 +405,7 @@ classdef ic_OPTtools_front_end_menu_controller < handle
             
             %FLIM
             if ~isempty(obj.data_controller.delays) && ~isempty(obj.data_controller.memmap_volm)
+                hw = waitbar(0,'Sending projection data to Icy...');
                 sizeT = numel(obj.data_controller.delays);
                 memRef = obj.data_controller.memmap_volm.Data;
                 n_planes = numel(memRef);
@@ -421,20 +422,24 @@ classdef ic_OPTtools_front_end_menu_controller < handle
                              volm(:,:,z,c,t) = memRef(index).plane;
                          end
                     icy_im3show(cast(volm,'single'),['volm scale 1/' num2str(obj.data_controller.downsampling) ' : ' obj.get_current_data_info_string]);
-                    disp('Sending volume data to Icy...')
+                    if ~isempty(hw), delete(hw), drawnow, end
                     return; % :)
                 catch
+                    if ~isempty(hw), delete(hw), drawnow, end
+                    errordlg('Error - Icy might be not started or is incorrectly configured');  
                     % nothing
                 end
                 %
-            end
+            
             %FLIM
             
-            if ~isempty(obj.data_controller.volm)
+            elseif ~isempty(obj.data_controller.volm)
+                hw = waitbar(0,'Sending projection data to Icy...');
                 try
                     icy_im3show(cast(obj.data_controller.volm,'single'),['volm scale 1/' num2str(obj.data_controller.downsampling) ' : ' obj.get_current_data_info_string]);
-                    disp('Sending volume data to Icy...')
+                    if ~isempty(hw), delete(hw), drawnow, end
                 catch
+                    if ~isempty(hw), delete(hw), drawnow, end
                     errordlg('Error - Icy might be not started or is incorrectly configured');                    
                 end
             else
