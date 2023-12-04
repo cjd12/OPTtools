@@ -755,11 +755,11 @@ function edit19_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edit19 as a double
     value = str2double(get(hObject,'String'));
     if ~isnan(value)
-        handles.TwIST_testslice = floor(value);
+        handles.TwIST_testslice = value;
         guidata(hObject,handles);
     else
         value = handles.TwIST_testslice;
-        set(hObject,'String',num2str(floor(value)));
+        set(hObject,'String',num2str(value));
     end
     uiresume(handles.figure1);
 
@@ -799,28 +799,15 @@ data_controller.TwIST_TAU = handles.TwIST_TAU;
         data_controller.TwIST_TVITER = handles.TwIST_TVITER;
         data_controller.TwIST_MAXSVD = handles.TwIST_MAXSVD;
 if ~isempty(data_controller.proj)
+    disp('Reconstructing example slice')
+    sinogram = squeeze(data_controller.proj(:,handles.TwIST_testslice,:));
     sizey = size(data_controller.proj,2);
-    %disp(sizey)
-    %disp(handles.TwIST_testslice)
-    if handles.TwIST_testslice > sizey | handles.TwIST_testslice <1
-        errordlg(['Please select a slice within the volume range (1 to ',num2str(sizey),')']);
+    disp(sizey)
+    if handles.TwIST_testslice <= sizey && handles.TwIST_testslice >0
+        reconslice = data_controller.FBP_TwIST(sinogram);
+        figure; imagesc(reconslice); axis equal off tight; colormap gray; title(['Slice number = ',num2str(handles.TwIST_testslice),', tau = ',num2str(handles.TwIST_TAU)]);
     else
-        
-        whichslice = floor(handles.TwIST_testslice);
-        if strcmp(data_controller.Reconstruction_GPU,'OFF')
-            wait_handle = waitbar(0,'Reconstructing example slice on the CPU');
-            %disp('Reconstructing example slice using the GPU')
-            sinogram = squeeze(data_controller.proj(:,whichslice,:));
-            reconslice = data_controller.FBP_TwIST(sinogram);
-        else
-            wait_handle = waitbar(0,'Reconstructing example slice on the GPU');
-            %disp('Reconstructing example slice using the CPU')
-            sinogram = gpuArray(squeeze(data_controller.proj(:,whichslice,:)));
-            reconslice = gather(data_controller.FBP_TwIST(sinogram));
-        end
-        figure; imagesc(reconslice); axis equal off tight; colormap gray; title(['Slice number = ',num2str(whichslice),', tau = ',num2str(handles.TwIST_TAU)]);
-        handles.TwIST_testslice = whichslice;
-        close(wait_handle);
+        errordlg(['Please select a slice within the volume range (1 to ',num2str(sizey),')']);
     end
 else
     %disp('Please load projections before trying to reconstruct a slice')

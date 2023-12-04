@@ -42,7 +42,7 @@ classdef ic_OPTtools_gui
             end
             
             if ~isdeployed
-                addpath_ALYtools;
+                addpath_OPTtools;
             else
                 wait = true;
             end
@@ -86,7 +86,7 @@ classdef ic_OPTtools_gui
             guidata(obj.window,handles);
                         
             if ~isdeployed
-            
+
                 loadOmero();
 
                 % find path to OMEuiUtils.jar - approach copied from
@@ -96,7 +96,7 @@ classdef ic_OPTtools_gui
                 jPath = javaclasspath('-dynamic');
                 utilJarInPath = false;
                 for i = 1:length(jPath)
-                    if strfind(jPath{i},'OMEuiUtils.jar');
+                    if strfind(jPath{i},'OMEuiUtils.jar')
                         utilJarInPath = true;
                         break;
                     end
@@ -110,7 +110,7 @@ classdef ic_OPTtools_gui
                     if ~isempty(path) && exist(path, 'file') == 2
                         javaaddpath(path);
                     else 
-                         assert('Cannot automatically locate an OMEuiUtils JAR file');
+                         error('Cannot automatically locate an OMEuiUtils JAR file');
                     end
                 end
 

@@ -307,6 +307,8 @@ else
        AT = varargin{i+1};
      case 'VERBOSE'
        verbose = varargin{i+1};
+     case 'MAX_SVD'
+       max_svd = varargin{i+1};
      otherwise
       % Hmmm, something wrong with the parameter string
       error(['Unrecognized option: ''' varargin{i} '''']);

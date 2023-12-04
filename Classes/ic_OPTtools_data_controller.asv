@@ -2605,8 +2605,8 @@ end
             %            
                 if verbose
                     str = strsplit(pth,filesep);
+                    msg = (['Reading planes from ', char(str(length(str)))],'Interpreter','None');
                     wait_handle = waitbar(0,['Reading planes from ', char(str(length(str)))]);
-                    wait_handle.Children.Title.Interpreter = 'none';
                 end                 
                 %      
 
@@ -2936,7 +2936,6 @@ end
                     if verbose
                         if ~isempty(obj.brightbgdir) || ~isempty(obj.darkbgdir)
                             waitbar(k/n_planes,wait_handle,['Reading planes with background correction from ' char(str(length(str)))]);
-                            wait_handle.Children.Title.Interpreter = 'none';
                         else
                             waitbar(k/n_planes,wait_handle);
                         end

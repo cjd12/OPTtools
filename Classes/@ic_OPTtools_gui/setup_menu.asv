@@ -149,13 +149,6 @@ function handles = setup_menu(obj,handles)
     handles.menu_bleaching_correction_on = uimenu(menu_bleaching_correction,'Label','On');
     handles.menu_bleaching_correction_off = uimenu(menu_bleaching_correction,'Label','Off');
 
-    menu_current_registration = uimenu(menu_settings,'Label',['Current registration: Shift: ',num2str(handles.data_controller.registration_shift),...
-        ', Rot.: ',num2str(handles.data_controller.registration_rotation),char(176)],'Enable','Off','Separator','On');
-    handles.menu_current_registration = menu_current_registration;
-    menu_rerun_registration = uimenu(menu_settings,'Label','Re-run registration','Separator','Off');
-    handles.menu_rerun_registration = menu_rerun_registration;
-
-%-----------------------------RECONSTRUCTION SETTINGS
     
     recon_label = uimenu(menu_settings,'Label','Reconstruction settings:','Enable','off','Separator','On');
 
@@ -203,8 +196,8 @@ function handles = setup_menu(obj,handles)
         handles.menu_FBP_interp_nearest = uimenu(menu_FBP_interp,'Label','Nearest-neighbor');    
         handles.menu_FBP_interp_linear = uimenu(menu_FBP_interp,'Label','Linear');    
         handles.menu_FBP_interp_spline = uimenu(menu_FBP_interp,'Label','Spline');    
-        handles.menu_FBP_interp_pchip = uimenu(menu_FBP_interp,'Label','Shape-preserving piecewise cubic (''pchip'')');    
-        handles.menu_FBP_interp_v5cubic = uimenu(menu_FBP_interp,'Label','Cubic convolution used in MATLAB 5 (''v5cubic'')');    
+        handles.menu_FBP_interp_pchip = uimenu(menu_FBP_interp,'Label','Shape-preserving');    
+        handles.menu_FBP_interp_v5cubic = uimenu(menu_FBP_interp,'Label','v5cubic');    
     
     menu_FBP_filter = uimenu(menu_settings,'Label',['FBP filter : ' FBP_filter]);
         handles.menu_FBP_filter_Ram_Lak = uimenu(menu_FBP_filter,'Label','Ram-Lak');
@@ -214,12 +207,9 @@ function handles = setup_menu(obj,handles)
         handles.menu_FBP_filter_Hann = uimenu(menu_FBP_filter,'Label','Hann');
         handles.menu_FBP_filter_None = uimenu(menu_FBP_filter,'Label','None');        
     
-    handles.menu_FBP_freq_scaling = uimenu(menu_settings,'Label',['FBP frequency scaling : ' num2str(FBP_fscaling)]);    
+    handles.menu_FBP_freq_scaling = uimenu(menu_settings,'Label',['FBP fscaling : ' num2str(FBP_fscaling)]);    
     handles.menu_FBP_interp = menu_FBP_interp;
     handles.menu_FBP_filter = menu_FBP_filter;
-
-    menu_FBP_exampleslice = uimenu(menu_settings,'Label','Reconstruct example slice using FBP');
-    handles.menu_FBP_exampleslice = menu_FBP_exampleslice;
     
     handles.menu_settings_TwIST = uimenu(menu_settings,'Label','TwIST Parameters...','Separator','On');
     

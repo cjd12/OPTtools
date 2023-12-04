@@ -62,8 +62,6 @@ classdef ic_OPTtools_front_end_menu_controller < handle
         menu_Batch_save_format_matlab;
         menu_Batch_RunBatch;
         
-        menu_current_registration;
-
         menu_Batch_Src_slctd_HD;
         menu_Batch_Src_slctd_OMERO;
                                         
@@ -716,9 +714,7 @@ classdef ic_OPTtools_front_end_menu_controller < handle
             fscaling = enter_value();
             if ~isnan(fscaling) && fscaling > 0 && fscaling <= 1
                 obj.data_controller.FBP_fscaling = fscaling;
-                set(obj.menu_FBP_freq_scaling,'Label',['FBP fscaling : ' num2str(fscaling)]);
-            else
-                errordlg('Please set FBP frequency scaling to a number between 0 and 1')
+                set(obj.menu_FBP_freq_scaling,'Label',['FBP fscaling : ' num2str(fscaling)]);                    
             end
         end
         %  -------------------------------------------------------------------
@@ -1043,11 +1039,7 @@ classdef ic_OPTtools_front_end_menu_controller < handle
                 if ~strcmp('None',obj.data_controller.registration_method)
                     obj.data_controller.do_registration;
                 else
-                    msgbox('Registration method is set to ''None'', no registration will be performed.')
-                end
-            else
-                errordlg('Please load projection images before attempting registration.')
-            end
+                    msgbox()
         end
         
         

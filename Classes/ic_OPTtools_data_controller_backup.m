@@ -55,8 +55,6 @@ classdef ic_OPTtools_data_controller < handle
         
         batchsaveformat = '.tif';
 
-        writeparameterfile = 'On';
-
         % TwIST
         TwIST_TAU = 0.0008; %1
         TwIST_LAMBDA = 1e-4; %2
@@ -73,9 +71,7 @@ classdef ic_OPTtools_data_controller < handle
         TwIST_INITIALIZATION = 0; %13
         TwIST_MONOTONE = 1; %14
         TwIST_SPARSE = 1; %15
-        TwIST_VERBOSE = 0; %16
-        TwIST_TVITER = 10; %17
-        TwIST_MAXSVD = 100; %18
+        TwIST_VERBOSE = 0; %16                               
         % TwIST        
         
         swap_XY_dimensions = 'Horizontal'; % 'Horizontal is default, and required for proper recon. Vertical will rotate proj before recon.
@@ -99,7 +95,6 @@ classdef ic_OPTtools_data_controller < handle
         
         BatchDstDirectory = [];
         BatchSrcDirectory = [];        
-        
         
         SrcDir = [];
         SrcFileList = [];
@@ -130,10 +125,6 @@ classdef ic_OPTtools_data_controller < handle
         M1_hshift = []; % registratin corrections kept for the case of re-usage for FLIM
         M1_vshift = [];
         M1_rotation = [];
-
-        TwIST_testslice = 1;
-
-        registration_rotation = 0;
                                         
     end    
         
@@ -215,32 +206,23 @@ classdef ic_OPTtools_data_controller < handle
                                end
                                cd(prevdir);
                         elseif ismac
-                            errordlg('Sorry, automatic search for Icy directory not currently working for Mac users, please manually select your Icy directory.')
-                            obj.IcyDirectory = uigetdir('c:\','Select Icy directory');
-                            % to do properly
+                            % to do
                         else
                             % to do
                         end                
                         delete(hw); drawnow;
                         addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabcommunicator'));
-                        addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabxserver'));
                         icy_init();
                         return
                     case 'Yes, manually select Icy directory'
                         obj.IcyDirectory = uigetdir('c:\','Select Icy directory');
                         addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabcommunicator'));
-                        addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabxserver'));
                         icy_init();
                         return
                     case 'No, don''t use Icy'
                         obj.noIcy = 1;
                         return
                 end
-            elseif ~isempty(obj.IcyDirectory) && isempty(obj.noIcy)
-                %disp('Adding Icy paths')
-                addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabcommunicator'));
-                addpath(strcat(obj.IcyDirectory,filesep,'plugins',filesep,'ylemontag',filesep,'matlabxserver'));
-                icy_init();
             end
             
             % detect GPU
@@ -272,9 +254,7 @@ classdef ic_OPTtools_data_controller < handle
             obj.TwIST_INITIALIZATION = 0; %13
             obj.TwIST_MONOTONE = 1; %14
             obj.TwIST_SPARSE = 1; %15
-            obj.TwIST_VERBOSE = 0; %16
-            obj.TwIST_TVITER = 10; %17
-            obj.TwIST_MAXSVD = 100; %17;
+            obj.TwIST_VERBOSE = 0; %16                                           
         end
 %-------------------------------------------------------------------------%                
         function save_settings(obj,~,~)        
@@ -288,7 +268,6 @@ classdef ic_OPTtools_data_controller < handle
             settings.FBP_filter = obj.FBP_filter;
             settings.FBP_fscaling = obj.FBP_fscaling;
             settings.batchsaveformat = obj.batchsaveformat;
-            settings.writeparameterfile = obj.writeparameterfile;
             %settings.angularcoverage = obj.angularcoverage;
             
             settings.Reconstruction_Method =  obj.Reconstruction_Method;
@@ -314,8 +293,6 @@ classdef ic_OPTtools_data_controller < handle
             settings.TwIST_MONOTONE = obj.TwIST_MONOTONE;
             settings.TwIST_SPARSE = obj.TwIST_SPARSE;
             settings.TwIST_VERBOSE = obj.TwIST_VERBOSE;
-            settings.TwIST_TVITER = obj.TwIST_TVITER;
-            settings.TwIST_MAXSVD = obj.TwIST_MAXSVD;
             % TwIST 
                         
             settings.Prefiltering_Size = obj.Prefiltering_Size;
@@ -350,7 +327,6 @@ classdef ic_OPTtools_data_controller < handle
                 obj.FBP_filter = settings.FBP_filter;
                 obj.FBP_fscaling = settings.FBP_fscaling;
                 obj.batchsaveformat = settings.batchsaveformat;
-                obj.writeparameterfile = settings.writeparameterfile;
                 %obj.angularcoverage = settings.angularcoverage;
                 %
                 obj.Reconstruction_Method = settings.Reconstruction_Method;
@@ -374,8 +350,6 @@ classdef ic_OPTtools_data_controller < handle
                 obj.TwIST_MONOTONE = settings.TwIST_MONOTONE;
                 obj.TwIST_SPARSE = settings.TwIST_SPARSE;
                 obj.TwIST_VERBOSE = settings.TwIST_VERBOSE;
-                obj.TwIST_TVITER = settings.TwIST_TVITER;
-                obj.TwIST_MAXSVD = settings.TwIST_MAXSVD;
                 % TwIST                                        
                 obj.Prefiltering_Size = settings.Prefiltering_Size;
                 %
@@ -812,53 +786,11 @@ function save_volume(obj,full_filename,verbose,~)
     % mat-file
     if  contains(lower(full_filename),'.mat')
         %
-        if strcmp(obj.writeparameterfile,'On')
-            if strcmp(obj.registration_method,'Auto + Manual confirmation') | strcmp(obj.registration_method,'Manual registration')
-                proptxt = fopen([erase(full_filename,'.mat'),'_Registration_params.txt'],'w');
-                fprintf(proptxt,' Shift = %3.1f\r\n Rotation = %3.2f',[obj.registration_shift obj.registration_rotation]);
-                fclose(proptxt);
-            elseif strcmp(obj.registration_method,'Rotation axis shift only')
-                proptxt = fopen([erase(full_filename,'.mat'),'_Registration_params.txt'],'w');
-                fprintf(proptxt,'Shift=%3.1f',obj.registration_shift);
-                fclose(proptxt);
-            end
-            if ~isempty(strfind(obj.Reconstruction_Method,'TwIST'))
-                
-                proptxt2 = fopen([erase(full_filename,'.mat'),'_TwIST_params.txt'],'w');
-                fprintf(proptxt2,' Tau = %.4f\r\n Lambda = %.5f\r\n Alpha = %1d\r\n Beta = %1d\r\n Stop Criterion = %1d\r\n ToleranceA = %6.5f\r\n ToleranceD = %.5f\r\n Debias = %1d\r\n MaxIterA %6d\r\n MaxIterD = %4d\r\n MinIterA = %4d\r\n MinIterD = %4d\r\n Inititalisation = %d\r\n Monotone = %d\r\n Sparse = %d\r\n Verbose = %d\r\n TV Iterations = %d\r\n Max SVD = %d',...
-                    [obj.TwIST_TAU, obj.TwIST_LAMBDA, obj.TwIST_ALPHA, obj.TwIST_BETA, obj.TwIST_STOPCRITERION, ...
-                    obj.TwIST_TOLERANCEA, obj.TwIST_TOLERANCED, obj.TwIST_DEBIAS, obj.TwIST_MAXITERA, ...
-                    obj.TwIST_MAXITERD, obj.TwIST_MINITERA, obj.TwIST_MINITERD, obj.TwIST_INITIALIZATION, ...
-                    obj.TwIST_MONOTONE, obj.TwIST_SPARSE, obj.TwIST_VERBOSE, obj.TwIST_TVITER, obj.TwIST_MAXSVD]);
-                fclose(proptxt2);
-            end
-        end
         vol = obj.volm;
         save(full_filename,'vol','-v7.3');
         clear('vol');
     elseif contains(lower(full_filename),'.ome.tiff')
-    %   
-        if strcmp(obj.writeparameterfile,'On')
-            if strcmp(obj.registration_method,'Auto + Manual confirmation') | strcmp(obj.registration_method,'Manual registration')
-                proptxt = fopen([erase(full_filename,'.ome.tiff'),'_Registration_params.txt'],'w');
-                fprintf(proptxt,' Shift = %3.1f\r\n Rotation = %3.2f',[obj.registration_shift obj.registration_rotation]);
-                fclose(proptxt);
-            elseif strcmp(obj.registration_method,'Rotation axis shift only')
-                proptxt = fopen([erase(full_filename,'.ome.tiff'),'_Registration_params.txt'],'w');
-                fprintf(proptxt,'Shift = %3.1f',obj.registration_shift);
-                fclose(proptxt);
-            end
-            if ~isempty(strfind(obj.Reconstruction_Method,'TwIST'))
-                
-                proptxt2 = fopen([erase(full_filename,'.ome.tiff'),'_TwIST_params.txt'],'w');
-                fprintf(proptxt2,' Tau = %.4f\r\n Lambda = %.5f\r\n Alpha = %1d\r\n Beta = %1d\r\n Stop Criterion = %1d\r\n ToleranceA = %6.5f\r\n ToleranceD = %.5f\r\n Debias = %1d\r\n MaxIterA %6d\r\n MaxIterD = %4d\r\n MinIterA = %4d\r\n MinIterD = %4d\r\n Inititalisation = %d\r\n Monotone = %d\r\n Sparse = %d\r\n Verbose = %d\r\n TV Iterations = %d\r\n Max SVD = %d',...
-                    [obj.TwIST_TAU, obj.TwIST_LAMBDA, obj.TwIST_ALPHA, obj.TwIST_BETA, obj.TwIST_STOPCRITERION, ...
-                    obj.TwIST_TOLERANCEA, obj.TwIST_TOLERANCED, obj.TwIST_DEBIAS, obj.TwIST_MAXITERA, ...
-                    obj.TwIST_MAXITERD, obj.TwIST_MINITERA, obj.TwIST_MINITERD, obj.TwIST_INITIALIZATION, ...
-                    obj.TwIST_MONOTONE, obj.TwIST_SPARSE, obj.TwIST_VERBOSE, obj.TwIST_TVITER, obj.TwIST_MAXSVD]);
-                fclose(proptxt2);
-            end
-        end
+    %           
         [szX,szY,szZ] = size(obj.volm);
         V = map(obj.volm,0,65535);
         if 32 == obj.save_volume_bit_depth
@@ -880,29 +812,6 @@ function save_volume(obj,full_filename,verbose,~)
     %           
         [szX,szY,szZ] = size(obj.volm);
         mkdir(erase(full_filename,'.tif'));
-        
-        if strcmp(obj.writeparameterfile,'On')
-            if strcmp(obj.registration_method,'Auto + Manual confirmation') | strcmp(obj.registration_method,'Manual registration')
-                proptxt = fopen([erase(full_filename,'.tif'),filesep,'Registration_params.txt'],'w');
-                fprintf(proptxt,' Shift = %3.1f\r\n Rotation = %3.2f',[obj.registration_shift obj.registration_rotation]);
-                fclose(proptxt);
-            elseif strcmp(obj.registration_method,'Rotation axis shift only')
-                proptxt = fopen([erase(full_filename,'.tif'),filesep,'Registration_params.txt'],'w');
-                fprintf(proptxt,'Shift = %3.1f',obj.registration_shift);
-                fclose(proptxt);
-            end
-            if ~isempty(strfind(obj.Reconstruction_Method,'TwIST'))
-                
-                proptxt2 = fopen([erase(full_filename,'.tif'),filesep,'TwIST_params.txt'],'w');
-                fprintf(proptxt2,' Tau = %.4f\r\n Lambda = %.5f\r\n Alpha = %1d\r\n Beta = %1d\r\n Stop Criterion = %1d\r\n ToleranceA = %6.5f\r\n ToleranceD = %.5f\r\n Debias = %1d\r\n MaxIterA %6d\r\n MaxIterD = %4d\r\n MinIterA = %4d\r\n MinIterD = %4d\r\n Inititalisation = %d\r\n Monotone = %d\r\n Sparse = %d\r\n Verbose = %d\r\n TV Iterations = %d\r\n Max SVD = %d',...
-                    [obj.TwIST_TAU, obj.TwIST_LAMBDA, obj.TwIST_ALPHA, obj.TwIST_BETA, obj.TwIST_STOPCRITERION, ...
-                    obj.TwIST_TOLERANCEA, obj.TwIST_TOLERANCED, obj.TwIST_DEBIAS, obj.TwIST_MAXITERA, ...
-                    obj.TwIST_MAXITERD, obj.TwIST_MINITERA, obj.TwIST_MINITERD, obj.TwIST_INITIALIZATION, ...
-                    obj.TwIST_MONOTONE, obj.TwIST_SPARSE, obj.TwIST_VERBOSE, obj.TwIST_TVITER, obj.TwIST_MAXSVD]);
-                fclose(proptxt2);
-            end
-        end
-        
         if 16 == obj.save_volume_bit_depth
             V = map(obj.volm,0,65535);
             V = uint16(V);
@@ -1023,7 +932,7 @@ end
         function reconstruction = FBP_TwIST(obj,sinogram,~)
                                                 
             % denoising function;    %Change if necessary - strength of total variarion
-            tv_iters = obj.TwIST_TVITER;            
+            tv_iters = 5;            
             Psi = @(x,th)  tvdenoise(x,2/th,tv_iters);
 
             if strcmp(obj.Reconstruction_GPU,'OFF')
@@ -1058,46 +967,36 @@ end
                          'StopCriterion',obj.TwIST_STOPCRITERION,...
                          'ToleranceA',obj.TwIST_TOLERANCEA,...
                          'ToleranceD',obj.TwIST_TOLERANCED,...
-                         'Verbose', obj.TwIST_VERBOSE,...
-                         'max_svd',obj.TwIST_MAXSVD);
+                         'Verbose', obj.TwIST_VERBOSE);
                      
             else % if strcmp(obj.Reconstruction_GPU,'ON') && obj.isGPU
                                               
                 % TERES'A FIX - WORKS
-                % disp(obj.angles)
-                % disp('now the calculated ones')
-                % Na_ = length(obj.angles);
-                %                  a_max_ = obj.angles(Na_);
-                %                  a_min_ = 0;
-                %                  angle = (a_max_ - a_min_)/Na_; 
-                % angles_total = linspace(0,a_max_ - angle,Na_);      % for hRT
-                % 
-                % Rangles = angles_total;
-                % Rangles_half = Rangles(Rangles<180);                % for hR 
-                % Rangles_half2 = Rangles(Rangles>=180)-180;
-                % disp(Rangles);
-                % disp('now halves');
-                % disp(Rangles_half);
-                % disp(Rangles_half2)
+                Na_ = length(obj.angles);
+                                 a_max_ = obj.angles(Na_);
+                                 a_min_ = 0;
+                                 angle = (a_max_ - a_min_)/Na_; 
+                angles_total = linspace(0,a_max_ - angle,Na_);      % for hRT
+
+                Rangles = angles_total;
+                Rangles_half = Rangles(Rangles<180);                % for hR 
+                Rangles_half2 = Rangles(Rangles>=180)-180;
+
                 [N,~] = size(sinogram); 
 
-                %hR = @(x)  hR2(x, Rangles_half, Rangles_half2);
-                hR = @(x) radon(x, obj.angles);
-                hRT = @(x) iradon(x, obj.angles,obj.FBP_interp,obj.FBP_filter,obj.FBP_fscaling,N);
+                hR = @(x)  hR2(x, Rangles_half, Rangles_half2);
+                hRT = @(x) iradon(x, Rangles,obj.FBP_interp,obj.FBP_filter,obj.FBP_fscaling,N);
                 % TERES'A FIX - WORKS
 
                 % set the penalty function, to compute the objective
                 Phi = @(x) TVnorm_gpu(x);
                 tau = gpuArray(obj.TwIST_TAU);
                 % input (padded) sinogram  
-                y = (obj.pad_sinogram_for_iradon(sinogram));
+                y = gpuArray(obj.pad_sinogram_for_iradon(sinogram));
 
-                rescale = max(y(:));
-                y=y./rescale;
-                
                  [reconstruction,dummy1,obj_twist,...
                     times_twist,dummy2,mse_twist]= ...
-                         TwIST_gpu_OPT(y,hR,...
+                         TwIST_gpu(y,hR,...
                          tau,...
                          'AT', hRT, ...
                          'Psi', Psi, ...
@@ -1110,9 +1009,8 @@ end
                          'StopCriterion',obj.TwIST_STOPCRITERION,...
                          'ToleranceA',obj.TwIST_TOLERANCEA,...
                          'ToleranceD',obj.TwIST_TOLERANCED,...
-                         'Verbose', obj.TwIST_VERBOSE,...
-                         'max_svd',obj.TwIST_MAXSVD);
-                 reconstruction = (reconstruction).*rescale;
+                         'Verbose', obj.TwIST_VERBOSE);
+                 reconstruction = gather(reconstruction);
             end
             
         end        
@@ -1179,7 +1077,6 @@ end
 
                          gpu_proj = gpuArray(cast(obj.proj(:,y_min:y_max,:),'single'));
                          gpu_volm = [];
-                         allon_gpu = [];
                          
                          for y = 1 : YL                                       
                             sinogram = squeeze(gpu_proj(:,y,:)); 
@@ -1187,34 +1084,17 @@ end
                             reconstruction = RF(sinogram);
                             if isempty(gpu_volm)
                                 [sizeR1,sizeR2] = size(reconstruction);
-                                try
-                                    gpu_volmtest = gpuArray(single(zeros(sizeR1,sizeR2,YL*2))); % to prevent running out of GPU memory
-                                    clear gpu_voltest;
-                                    gpu_volm = gpuArray(single(zeros(sizeR1,sizeR2,YL))); % XYZ
-                                    allon_gpu = 1;
-                                catch
-                                    %errordlg('The reconstructed volume cannot fit in GPU memory. Try enabling the Largo option.')
-                                    gpu_volm = 1;
-                                    allon_gpu = [];
-                                end
+                                gpu_volm = gpuArray(single(zeros(sizeR1,sizeR2,YL))); % XYZ
                             end                            
-                            if isempty(allon_gpu)
-                                V(:,:,y) = gather(reconstruction);
-                            else
-                                gpu_volm(:,:,y) = single(reconstruction);
-                                
-                            end
+                            gpu_volm(:,:,y) = reconstruction;                            
                             if ~isempty(hw), waitbar(y/YL,hw); drawnow, end;
                          end                           
-                         if ~isempty(allon_gpu)
-                            V = gather(gpu_volm);
-                         end
+                         V = gather(gpu_volm);
                          
                      else % with downsampling                         
                          
                          proj_r = [];
                          gpu_volm = [];
-                         allon_gpu = [];
                          
                          for r = 1:sizeZ
                             if isempty(proj_r) 
@@ -1232,25 +1112,12 @@ end
                             reconstruction = RF(sinogram);                            
                             if isempty(gpu_volm)
                                 [sizeR1,sizeR2] = size(reconstruction);
-                                try
-                                    gpu_volm = gpuArray(single(zeros(sizeR1,sizeR2,szY_r))); % XYZ
-                                    allon_gpu = 1;
-                                catch
-                                    %errordlg('The reconstructed volume cannot fit in GPU memory. Try enabling the Largo option.')
-                                    gpu_volm = 1;
-                                    allon_gpu = [];
-                                end
+                                gpu_volm = gpuArray(single(zeros(sizeR1,sizeR2,szY_r))); % XYZ
                             end                            
-                            if isempty(allon_gpu)
-                                V(:,:,y) = gather(reconstruction);
-                            else
-                                gpu_volm(:,:,y) = reconstruction;
-                            end
+                            gpu_volm(:,:,y) = reconstruction;                            
                             if ~isempty(hw), waitbar(y/szY_r,hw); drawnow, end;
-                         end                           
-                         if ~isempty(allon_gpu)
-                            V = gather(gpu_volm);
                          end
+                         V = gather(gpu_volm);
                          
                      end
                  % special case - using parfor
@@ -1433,11 +1300,6 @@ end
              obj.on_volm_clear;
                           
              [sizeX,sizeY,sizeZ] = size(obj.proj);
-             sizeontempdisk = java.io.File(tempdir).getFreeSpace();
-             if sizeontempdisk <= sizeX*sizeY*sizeZ*8
-                 errordlg('Not enough disk space in tempdir - please clear some space before continuing.')
-                 return
-             end
              wait_handle = waitbar(0,'Creating projection memory-map file...');
              [mapfile_name_proj,memmap_PROJ] = initialize_memmap([sizeX sizeY sizeZ],1,'pixels',class(obj.proj),'ini_data',obj.proj);                 
              close(wait_handle);
@@ -2605,8 +2467,7 @@ end
             %            
                 if verbose
                     str = strsplit(pth,filesep);
-                    wait_handle = waitbar(0,['Reading planes from ', char(str(length(str)))]);
-                    wait_handle.Children.Title.Interpreter = 'none';
+                    wait_handle = waitbar(0,['Reading planes from ' char(str(length(str)))]);
                 end                 
                 %      
 
@@ -2885,7 +2746,7 @@ end
                             end
 
                         case 'No: cancel loading'
-                            %if verbose, close(wait_handle), end;
+                            if verbose, close(wait_handle), end;
                             plane = [];
                             return
                     end
@@ -2936,7 +2797,6 @@ end
                     if verbose
                         if ~isempty(obj.brightbgdir) || ~isempty(obj.darkbgdir)
                             waitbar(k/n_planes,wait_handle,['Reading planes with background correction from ' char(str(length(str)))]);
-                            wait_handle.Children.Title.Interpreter = 'none';
                         else
                             waitbar(k/n_planes,wait_handle);
                         end
@@ -3138,14 +2998,9 @@ end
             [sizeX,sizeY,n_planes] = size(obj.proj);
             if strcmp('No',obj.large_projections_batch)
                 
-                sizeinmem = prod(size(obj.proj(:))).*4;
+                sizeinmem = max(size(obj.proj(:))).*4;
                 [~,sysmem] = memory;
                 %disp([num2str(sizeinmem) ' ' num2str(sysmem.PhysicalMemory.Available)])
-                sizeontempdisk = java.io.File(tempdir).getFreeSpace();
-                if sizeontempdisk <= sizeinmem
-                    errordlg('Not enough disk space in tempdir - please clear some space before continuing.')
-                    return
-                end
                 wait_handle = waitbar(0,'Creating projection memory-map file...');
                 [mapfile_name_proj,memmap_PROJ] = initialize_memmap([sizeX sizeY n_planes],1,'pixels',class(obj.proj),'ini_data',obj.proj);                 
                 close(wait_handle);
@@ -3233,38 +3088,31 @@ end
                     hw = waitbar(0,waitmsg);
                 end
                 %                        
-                %s = round(shift_median/2); % safest possible
-                obj.registration_shift = shift_median;
-                set(obj.menu_controller.menu_current_registration,'Label',['Current registration: Shift: ',num2str(obj.registration_shift),...
-                    ', Rot.: ',num2str(obj.registration_rotation),char(176)]);
-
-                if shift_median>0
-                    s = ceil(shift_median/2);
+                s = round(shift_median/2); % safest possible
+                obj.registration_shift = s;
+                if s < 0
+                    for k = 1:n_planes
+                        memmap_PROJ.Data.pixels(:,:,k) = flipud(memmap_PROJ.Data.pixels(:,:,k));
+                    end
+                    s = -s;
+                end
+                
+                if abs(s)>=1
+                    tform = affine2d(eye(3));                    
+                    tform.T(3,2) = - s;                
                     for k = 1:n_planes
                         I = memmap_PROJ.Data.pixels(:,:,k)-offset;
                         if isempty(obj.proj) % proper place to crop the image?
                                 [szx,szy] = size(I);
                                 obj.proj = zeros(szx-2*s,szy,n_planes,class(I));
                         end                
-                            Icorr = imtranslate(I,[0,-shift_median/2]);
+                            Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                             obj.proj(:,:,k) = Icorr(s+1:szx-s,:);
                         if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
-                    end
-                elseif shift_median == 0
-                    for k = 1:n_planes
-                        obj.proj(:,:,k) = memmap_PROJ.Data.pixels(:,:,k)-offset;
                     end
                 else
-                    s = ceil(-shift_median/2);
                     for k = 1:n_planes
-                        I = memmap_PROJ.Data.pixels(:,:,k)-offset;
-                        if isempty(obj.proj) % proper place to crop the image?
-                                [szx,szy] = size(I);
-                                obj.proj = zeros(szx-2*s,szy,n_planes,class(I));
-                        end                
-                            Icorr = imtranslate(I,[0,-shift_median/2]);
-                            obj.proj(:,:,k) = Icorr(s+1:szx-s,:);
-                        if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
+                        obj.proj(:,:,k) = memmap_PROJ.Data.pixels(:,:,k)-offset;
                     end
                 end
                 if ~isempty(hw), delete(hw), drawnow, end
@@ -3276,39 +3124,37 @@ end
                     offsets(i) = min(min(obj.proj(:,:,i)));
                 end
                 offset = min(offsets);
+                s = obj.registration_shift;
+                if s < 0
+                    for k = 1:n_planes
+                        obj.proj(:,:,k) = flipud(obj.proj(:,:,k));
+                    end
+                    s = -s;
+                end
                 hw3 = [];
                 waitmsg = ['Introducing corrections with ' obj.registration_method];
                 if ~obj.run_headless
                     hw3 = waitbar(0,waitmsg);
                 end
-                if obj.registration_shift>0
+                if abs(s)>=1
                     disp('Performing registration with saved shift')
-                    s = ceil(obj.registration_shift/2);
+                    tform = affine2d(eye(3));                    
+                    tform.T(3,2) = - s;                
                     for k = 1:n_planes
-                        I = memmap_PROJ.Data.pixels(:,:,k)-offset;
+                        I = obj.proj(:,:,k)-offset;
+                        [szx,szy] = size(I);
                         if isempty(obj.proj) % proper place to crop the image?
-                                [szx,szy] = size(I);
+                                
                                 obj.proj = zeros(szx-2*s,szy,n_planes,class(I));
                         end                
-                            Icorr = imtranslate(I,[0,-obj.registration_shift/2]);
-                            obj.proj(:,:,k) = Icorr(s+1:szx-s,:);
-                        if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
+                            Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
+                            obj.proj(1:szx-2*s,:,k) = Icorr(s+1:szx-s,:);
+                        if ~isempty(hw3), waitbar(k/n_planes,hw3); drawnow, end
                     end
-                elseif obj.registration_shift == 0
-                    for k = 1:n_planes
-                        obj.proj(:,:,k) = memmap_PROJ.Data.pixels(:,:,k)-offset;
-                    end
+                obj.proj(szx-2*s+1:end,:,:) = [];
                 else
-                    s = ceil(-obj.registration_shift/2);
                     for k = 1:n_planes
-                        I = memmap_PROJ.Data.pixels(:,:,k)-offset;
-                        if isempty(obj.proj) % proper place to crop the image?
-                                [szx,szy] = size(I);
-                                obj.proj = zeros(szx-2*s,szy,n_planes,class(I));
-                        end                
-                            Icorr = imtranslate(I,[0,-obj.registration_shift/2]);
-                            obj.proj(:,:,k) = Icorr(s+1:szx-s,:);
-                        if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
+                        obj.proj(:,:,k) = obj.proj(:,:,k)-offset;
                     end
                 end
                 if ~isempty(hw3), delete(hw3), drawnow, end
@@ -3322,14 +3168,9 @@ end
 
         function M1_do_registration(obj,~) % new semi-manual full registration
             [sizeX,sizeY,n_planes] = size(obj.proj);
-            sizeinmem = prod(size(obj.proj(:))).*4;
+            sizeinmem = max(size(obj.proj(:))).*4;
             [~,sysmem] = memory;
             %disp([num2str(sizeinmem) ' ' num2str(sysmem.PhysicalMemory.Available)])
-            sizeontempdisk = java.io.File(tempdir).getFreeSpace();
-            if sizeontempdisk <= sizeinmem
-                errordlg('Not enough disk space in tempdir - please clear some space before continuing.')
-                return
-            end
             wait_handle = waitbar(0,'Creating projection memory-map file...');
             [mapfile_name_proj,memmap_PROJ] = initialize_memmap([sizeX sizeY n_planes],1,'pixels',class(obj.proj),'ini_data',obj.proj);                 
             close(wait_handle);
@@ -3419,7 +3260,7 @@ end
             %     hw = waitbar(0,waitmsg);
             % end
             %                        
-            %s = ceil(shift_median/2); % safest possible
+            s = round(shift_median/2); % safest possible
 
             % if s < 0
             %     for k = 1:n_planes
@@ -3431,28 +3272,27 @@ end
             % UI figure to confirm registration here, before saving shifted
             % projections
 
-            if shift_median>0
-                s=ceil(shift_median/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+            if s>=1
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:2
                     I = memmap_PROJ.Data.pixels(:,:,(k-1)*floor(n_planes/2)+1)-offset;
                     [szx,szy] = size(I);
-                    Icorr = imtranslate(I,[0,-shift_median/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(s+1:szx-s,:);
                 end
-            elseif shift_median==0
+            elseif s==0
                 for k = 1:2
                     comparison(:,:,k) = memmap_PROJ.Data.pixels(:,:,(k-1)*floor(n_planes/2)+1)-offset;
                 end
             else
-                s = ceil(-shift_median/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = s;
+                s = -s;
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:2
                     I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+1)-offset);
                     [szx,szy] = size(I);
-                    Icorr = imtranslate(I,[0,-shift_median/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = (Icorr(s+1:szx-s,:));
                 end
 
@@ -3472,7 +3312,7 @@ end
             a.ImageSource = rgb.^0.5;
             a.Layout.Row = 1;
             a.Layout.Column = [1 3];
-            b = uibutton(g,"Text",'Yes, save my projection images',"ButtonPushedFcn",@(src,event) obj.M1_registration_confirmation(conf_reg,n_planes,memmap_PROJ,offset,shift_median));
+            b = uibutton(g,"Text",'Yes, save my projection images',"ButtonPushedFcn",@(src,event) obj.M1_registration_confirmation(conf_reg,tform,n_planes,memmap_PROJ,offset,s));
             b.Layout.Row = 3;
             b.Layout.Column = 2;
             c = uilabel(g,"Text",'Are the two projection images completely overlapped?');
@@ -3510,8 +3350,7 @@ end
                 % defaults
                 data.p=1;
                 data.r=0;
-                %data.s=round(shift_median);
-                data.s=shift_median;
+                data.s=round(shift_median/2);
 
                 guidata(man_reg,data);
 
@@ -3520,14 +3359,14 @@ end
                 g.ColumnWidth = {'1x','fit','fit','fit','1x'};
                 a = uiimage(g);
 
-                if data.s>0
-                    s=ceil(data.s/2); %/2
-                    %tform = affine2d(eye(3));
-                    %tform.T(3,2) = -s;
+                if data.s>=1
+                    s=round(data.s); %/2
+                    tform = affine2d(eye(3));
+                    tform.T(3,2) = -s;
                     for k = 1:2
                         I = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                         [szx,szy] = size(I);
-                        Icorr = imtranslate(I,[0,-data.s/2]);
+                        Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                         comparison(:,:,k) = Icorr(s+1:szx-s,:);
                     end
                 elseif data.s == 0
@@ -3535,13 +3374,13 @@ end
                         comparison(:,:,k) = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                     end
                 else
-                    s = ceil(-data.s/2);%/2
-                    %tform = affine2d(eye(3));
-                    %tform.T(3,2) = s;
+                    s = -round(data.s);%/2
+                    tform = affine2d(eye(3));
+                    tform.T(3,2) = s;
                     for k = 1:2
                         I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset);
                         [szx,szy] = size(I);
-                        Icorr = imtranslate(I,[0,-data.s/2]);
+                        Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                         comparison(:,:,k) = (Icorr(s+1:szx-s,:));
                     end
                 end
@@ -3608,14 +3447,9 @@ end
 
         function M3_do_registration(obj,~) % directly using manual registration
             [sizeX,sizeY,n_planes] = size(obj.proj);
-            sizeinmem = prod(size(obj.proj(:))).*4;
+            sizeinmem = max(size(obj.proj(:))).*4;
             [~,sysmem] = memory;
             %disp([num2str(sizeinmem) ' ' num2str(sysmem.PhysicalMemory.Available)])
-            sizeontempdisk = java.io.File(tempdir).getFreeSpace();
-            if sizeontempdisk <= sizeinmem
-                errordlg('Not enough disk space in tempdir - please clear some space before continuing.')
-                return
-            end
             wait_handle = waitbar(0,'Creating projection memory-map file...');
             [mapfile_name_proj,memmap_PROJ] = initialize_memmap([sizeX sizeY n_planes],1,'pixels',class(obj.proj),'ini_data',obj.proj);                 
             close(wait_handle);
@@ -3651,15 +3485,14 @@ end
             g.ColumnWidth = {'1x','fit','fit','fit','1x'};
             a = uiimage(g);
 
-            if data.s>0
-                s=ceil(data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+            if data.s>=1
+                s=round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:2
                     I = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                     [szx,szy] = size(I);
-                    %Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(s+1:szx-s,:);
                 end
             elseif data.s == 0
@@ -3667,14 +3500,13 @@ end
                     comparison(:,:,k) = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                 end
             else
-                s = ceil(-data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = s;
+                s = -round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:2
                     I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset);
                     [szx,szy] = size(I);
-                    %Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = (Icorr(s+1:szx-s,:));
                 end
             end
@@ -3748,16 +3580,16 @@ end
             if ~obj.run_headless
                 hw = waitbar(0,waitmsg);
             end
-            if s>0
-                crops=ceil(s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+            if s>=1
+                s=round(s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:n_planes
                     I = memmap_PROJ.Data.pixels(:,:,k)-offset;
                     [szx,szy] = size(I);
                     I = imrotate(I,r,'crop');
-                    Icorr = imtranslate(I,[0,-s/2]);
-                    obj.proj(:,:,k) = Icorr(ceil(abs(tand(r))*szy/2)+crops+1:szx-(crops+ceil(abs(tand(r))*szy/2)),1+ceil(abs(tand(r))*szx/2):end-ceil(abs(tand(r))*szx/2));
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
+                    obj.proj(:,:,k) = Icorr(ceil(abs(tand(r))*szy/2)+s+1:szx-(s+ceil(abs(tand(r))*szy/2)),1+ceil(abs(tand(r))*szx/2):end-ceil(abs(tand(r))*szx/2));
                     if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
                 end
             elseif s == 0
@@ -3767,22 +3599,18 @@ end
                     if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
                 end
             else
-                crops = ceil(-s/2);
-                % tform = affine2d(eye(3));
-                % tform.T(3,2) = s;
+                s = -round(s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:n_planes
                     I = (memmap_PROJ.Data.pixels(:,:,k)-offset);
                     [szx,szy] = size(I);
                     I = imrotate(I,r,'crop');
-                    Icorr = imtranslate(I,[0,-s/2]);
-                    obj.proj(:,:,k) = Icorr(ceil(abs(tand(r))*szy/2)+crops+1:szx-(crops+ceil(abs(tand(r))*szy/2)),1+ceil(abs(tand(r)*szx/2)):end-ceil(abs(tand(r)*szx/2)));
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
+                    obj.proj(:,:,k) = Icorr(ceil(abs(tand(r))*szy/2)+s+1:szx-(s+ceil(abs(tand(r))*szy/2)),1+ceil(abs(tand(r)*szx/2)):end-ceil(abs(tand(r)*szx/2)));
                     if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
                 end
             end
-            obj.registration_shift = s;
-            obj.registration_rotation = r;
-            set(obj.menu_controller.menu_current_registration,'Label',['Current registration: Shift: ',num2str(obj.registration_shift),...
-                    ', Rot.: ',num2str(obj.registration_rotation),char(176)]);
             close(hw);
 
         end
@@ -3791,14 +3619,14 @@ end
             data = guidata(src);
             data.p = round(event.Value);
             if data.s>=1
-                s=ceil(data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+                s=round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:2
                     I = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r))*szx/2):end-ceil(abs(tand(data.r))*szx/2));
                 end
             elseif data.s == 0
@@ -3807,14 +3635,14 @@ end
                     comparison(:,:,k) = I(ceil(abs(tand(data.r))*size(I,2)/2)+1:size(I,1)-(ceil(abs(tand(data.r))*size(I,2)/2)),1+ceil(abs(tand(data.r)*size(I,1)/2)):end-ceil(abs(tand(data.r)*size(I,1)/2)));
                 end
             else
-                s = ceil(-data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = s;
+                s = -round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:2
                     I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset);
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r)*szx/2)):end-ceil(abs(tand(data.r)*szx/2)));
                 end
             end
@@ -3832,16 +3660,15 @@ end
         function M1_select_shift(obj,src,event,memmap_PROJ,n_planes,offset,a)
             data = guidata(src);
             data.s = round(event.Value);
-            if data.s>0
-                s=ceil(data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+            if data.s>=1
+                s=round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:2
                     I = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    %Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r))*szx/2):end-ceil(abs(tand(data.r))*szx/2));
                 end
             elseif data.s == 0
@@ -3850,14 +3677,14 @@ end
                     comparison(:,:,k) = I(ceil(abs(tand(data.r))*size(I,2)/2)+1:size(I,1)-(ceil(abs(tand(data.r))*size(I,2)/2)),1+ceil(abs(tand(data.r)*size(I,1)/2)):end-ceil(abs(tand(data.r)*size(I,1)/2)));
                 end
             else
-                s = ceil(-data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = s;
+                s = -round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:2
                     I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset);
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r)*szx/2)):end-ceil(abs(tand(data.r)*szx/2)));
                 end
             end
@@ -3877,15 +3704,15 @@ end
             data = guidata(src);
             data.r = (event.Value);
 
-            if data.s>0
-                s=ceil(data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = -s;
+            if data.s>=1
+                s=round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = -s;
                 for k = 1:2
                     I = memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset;
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r))*szx/2):end-ceil(abs(tand(data.r))*szx/2));
                 end
             elseif data.s == 0
@@ -3894,14 +3721,14 @@ end
                     comparison(:,:,k) = I(ceil(abs(tand(data.r))*size(I,2)/2)+1:size(I,1)-(ceil(abs(tand(data.r))*size(I,2)/2)),1+ceil(abs(tand(data.r)*size(I,1)/2)):end-ceil(abs(tand(data.r)*size(I,1)/2)));
                 end
             else
-                s = ceil(-data.s/2);
-                %tform = affine2d(eye(3));
-                %tform.T(3,2) = s;
+                s = -round(data.s/2);
+                tform = affine2d(eye(3));
+                tform.T(3,2) = s;
                 for k = 1:2
                     I = (memmap_PROJ.Data.pixels(:,:,((k-1)*floor(n_planes/2))+data.p)-offset);
                     [szx,szy] = size(I);
                     I = imrotate(I,data.r,'crop');
-                    Icorr = imtranslate(I,[0,-data.s/2]);
+                    Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                     comparison(:,:,k) = Icorr(ceil(abs(tand(data.r))*szy/2)+s+1:szx-(s+ceil(abs(tand(data.r))*szy/2)),1+ceil(abs(tand(data.r)*szx/2)):end-ceil(abs(tand(data.r)*szx/2)));
                 end
             end
@@ -3917,7 +3744,7 @@ end
             guidata(src,data);
         end
 
-        function M1_registration_confirmation(obj,conf_reg,n_planes,memmap_PROJ,offset,shift_median,~)
+        function M1_registration_confirmation(obj,conf_reg,tform,n_planes,memmap_PROJ,offset,s,~)
             obj.manual_reg = 0;
             hw = [];
             waitmsg = 'Saving registered projection images...';
@@ -3925,12 +3752,7 @@ end
                 hw = waitbar(0,waitmsg);
             end
             %obj.proj = [];
-            if shift_median>0
-                s = ceil(shift_median/2);
-            elseif shift_median<0
-                s = ceil(-shift_median/2);
-            end
-            if abs(shift_median)>0
+            if abs(s)>=1
                 %tform = affine2d(eye(3));                    
                 %tform.T(3,2) = - s;                
                 for k = 1:n_planes
@@ -3939,7 +3761,7 @@ end
                             [szx,szy] = size(I);
                             obj.proj = zeros(szx-2*s,szy,n_planes,class(I));
                     end                
-                        Icorr = imtranslate(I,[0,-shift_median/2]);
+                        Icorr = imwarp(I,tform,'OutputView',imref2d(size(I)));
                         obj.proj(:,:,k) = Icorr(s+1:szx-s,:);
                     if ~isempty(hw), waitbar(k/n_planes,hw); drawnow, end
                 end
@@ -3949,7 +3771,7 @@ end
                 end
             end
             if ~isempty(hw), delete(hw), drawnow, end
-            obj.registration_shift = shift_median;
+            
             close(conf_reg)
             
         end

@@ -22,10 +22,10 @@ function varargout = enter_value(varargin)
 
 % Edit the above text to modify the response to help enter_value
 
-% Last Modified by GUIDE v2.5 25-Nov-2014 12:11:54
+% Last Modified by GUIDE v2.5 04-Dec-2023 12:20:59
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 0;
+gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @enter_value_OpeningFcn, ...
@@ -77,7 +77,7 @@ function varargout = enter_value_OutputFcn(hObject, eventdata, handles)
 varargout{1} = 1.;
 if isfield(handles,'output')
     varargout{1} = handles.output;
-end;
+end
 
 function edit1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit1 (see GCBO)
@@ -111,7 +111,3 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     fh = ancestor(hObject,'figure');     
     delete(fh);
-
-
-
-

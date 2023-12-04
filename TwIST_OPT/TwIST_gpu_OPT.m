@@ -307,11 +307,13 @@ else
        AT = varargin{i+1};
      case 'VERBOSE'
        verbose = varargin{i+1};
+     case 'MAX_SVD'
+       max_svd = varargin{i+1};
      otherwise
       % Hmmm, something wrong with the parameter string
       error(['Unrecognized option: ''' varargin{i} '''']);
-    end;
-  end;
+    end
+  end
 end
 %%%%%%%%%%%%%%
 
@@ -533,7 +535,7 @@ while cont_outer
     xm2 = xm1;
     xm1 = x;
 
-imagesc(x); pause(0.01);
+%imagesc(x); pause(0.01);
 
     %update the number of nonzero components and its variation
     nz_x_prev = nz_x;
