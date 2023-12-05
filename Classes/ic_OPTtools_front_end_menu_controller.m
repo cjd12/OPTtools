@@ -405,7 +405,7 @@ classdef ic_OPTtools_front_end_menu_controller < handle
             
             %FLIM
             if ~isempty(obj.data_controller.delays) && ~isempty(obj.data_controller.memmap_volm)
-                hw = waitbar(0,'Sending projection data to Icy...');
+                hw = waitbar(0,'Sending volume data to Icy...');
                 sizeT = numel(obj.data_controller.delays);
                 memRef = obj.data_controller.memmap_volm.Data;
                 n_planes = numel(memRef);
@@ -434,7 +434,7 @@ classdef ic_OPTtools_front_end_menu_controller < handle
             %FLIM
             
             elseif ~isempty(obj.data_controller.volm)
-                hw = waitbar(0,'Sending projection data to Icy...');
+                hw = waitbar(0,'Sending volume data to Icy...');
                 try
                     icy_im3show(cast(obj.data_controller.volm,'single'),['volm scale 1/' num2str(obj.data_controller.downsampling) ' : ' obj.get_current_data_info_string]);
                     if ~isempty(hw), delete(hw), drawnow, end
