@@ -16,7 +16,7 @@ Several applications were reported in the literature, and some are mentioned bel
 # System Requirements
 
 ## Software
-OPTtools requires at least Matlab 2019b, and the Image Processing Toolboxe. Icy (http://icy.bioimageanalysis.org/) integration for viewing/rendering 3D images is supported, but optional.
+OPTtools requires at least Matlab 2019b, and the Image Processing Toolbox. Icy (http://icy.bioimageanalysis.org/) integration for viewing/rendering 3D images is supported, but optional.
 Windows 10 required.
 ## Hardware
 Hardware requirements depend on "Application", but in most cases average desktop specs suffice. NVIDIA GPU may be optionally used to accelerate reconstruction.
