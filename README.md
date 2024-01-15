@@ -30,7 +30,8 @@ On first run, the software can automatically find the Icy directory, or the user
 
 # User Guide
 
-Please find a more detailed user guide on the Imperial Photonics wiki.
+Please download the full user guide here:
+[OPT_Reconstruction_with_OPTtools_User_Guide.pdf](https://github.com/cjd12/OPTtools/files/13939944/OPT_Reconstruction_with_OPTtools_User_Guide.pdf)
 
 # License
 Original ALYtools code is covered by MIT license. Code involving third party designs under GPL v2, is covered by that license.
