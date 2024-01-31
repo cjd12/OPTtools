@@ -152,8 +152,8 @@ function handles = setup_menu(obj,handles)
     menu_current_registration = uimenu(menu_settings,'Label',['Current registration: Shift: ',num2str(handles.data_controller.registration_shift),...
         ', Rot.: ',num2str(handles.data_controller.registration_rotation),char(176)],'Enable','Off','Separator','On');
     handles.menu_current_registration = menu_current_registration;
-    menu_rerun_registration = uimenu(menu_settings,'Label','Re-run registration','Separator','Off');
-    handles.menu_rerun_registration = menu_rerun_registration;
+    %menu_rerun_registration = uimenu(menu_settings,'Label','Re-run registration','Separator','Off');
+    %handles.menu_rerun_registration = menu_rerun_registration;
 
 %-----------------------------RECONSTRUCTION SETTINGS
     
